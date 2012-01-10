@@ -71,6 +71,8 @@ class Link private (val backend: GraphDatabase) extends Model {
       null
   }
 
+  // Tags can be found with the TaggedLink relations.
+  // We assume that only Tag nodes use this relationship type
   def tags = {
     (node.
       getRelationships(Relations.TaggedLink, Direction.INCOMING) map { node =>
