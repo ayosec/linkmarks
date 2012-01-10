@@ -10,17 +10,19 @@ import com.ayosec.linkmarks.Relations
 import com.ayosec.linkmarks.GraphDatabase
 
 class LinkBuilder {
-  var date: DateTime = null
-  var notes: String  = null
-  var title: String  = null
-  var link: String   = null
-  var tags           = List[String]()
+  var date:  DateTime = null
+  var notes: String   = null
+  var title: String   = null
+  var link:  String   = null
+
+  var tags = List[String]()
 
   var fromRoot: Boolean = false
 }
 
 class Link private (val backend: GraphDatabase) extends Model {
 
+  // Constructor to create a new node
   def this(backend: GraphDatabase, callback: LinkBuilder => Unit) {
     this(backend)
 
@@ -46,18 +48,27 @@ class Link private (val backend: GraphDatabase) extends Model {
     }
   }
 
+  // Constructor used to wrap an existent node
   def this(backend: GraphDatabase, rawNode: Node) = {
     this(backend)
     node = rawNode
   }
 
-  def notes = node.getProperty("notes", null).asInstanceOf[String]
-  def title = node.getProperty("title", null).asInstanceOf[String]
-  def link = node.getProperty("link", null).asInstanceOf[String]
+  // Basic fields, with no conversions
+  def notes = getProp("notes")
+  def title = getProp("title")
+  def link  = getProp("link")
 
+  protected def getProp(name: String) = node.getProperty(name, null).asInstanceOf[String]
+
+  // Date is stored as a long (timestamp) value, but this getter
+  // will convert it to a DateTime instance
   def date = {
     val date = node.getProperty("date", null)
-    if(date != null) new DateTime(date.asInstanceOf[Long]) else null
+    if(date != null)
+      new DateTime(date.asInstanceOf[Long])
+    else
+      null
   }
 
   def tags = {
