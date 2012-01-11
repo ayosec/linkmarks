@@ -50,9 +50,12 @@ object DeliciousDumps extends SourceParser {
 
       for(link <- links) {
         val date = new DateTime(link.attr("date").toInt * 1000L)
-        val href = link.select(".share").first.attr("href")
         val tags = link.select(".tag .name") map { _.text }
         val note = link.select(".note") map { _.text } mkString "\n"
+
+        val linkTag = link.select(".share").first
+        val title = linkTag.attr("title")
+        val href = linkTag.attr("href")
 
         //println("%s - %s - %s - %s".format(date, href, tags, note))
         db.synchronized {
@@ -60,7 +63,7 @@ object DeliciousDumps extends SourceParser {
             l.date = date
             l.tags = tags.toList
             l.notes = note
-            l.title = href
+            l.title = title
             l.link = href
             l.fromRoot = true
           }
