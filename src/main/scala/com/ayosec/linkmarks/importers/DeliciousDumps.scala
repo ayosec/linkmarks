@@ -3,6 +3,9 @@ package com.ayosec.linkmarks.importers
 import scala.collection.JavaConversions._
 
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.Callable
+
 import org.jsoup.Jsoup
 import org.joda.time.DateTime
 
@@ -22,9 +25,27 @@ object DeliciousDumps extends SourceParser {
   val deliciousUrl = "http://delicious.com"
 
   def fromSource(source: String, db: GraphDatabase) {
-    for(fileName <- new File(source).listFiles) {
+    val threadPool = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors)
+
+    val futures =
+      for(fileName <- new File(source).listFiles)
+        yield threadPool.submit(new ParseLinks(fileName, db))
+
+    threadPool.shutdown
+
+    var acc = 0
+    for(future <- futures) {
+      acc += future.get
+      print("\r" + acc + " links")
+    }
+  }
+
+  final class ParseLinks(file: File, db: GraphDatabase) extends Callable[Int] {
+    def call = {
+      var count = 0
+
       val links = Jsoup.
-                    parse(fileName, "UTF-8", deliciousUrl).
+                    parse(file, "UTF-8", deliciousUrl).
                     select("div.link")
 
       for(link <- links) {
@@ -34,17 +55,23 @@ object DeliciousDumps extends SourceParser {
         val note = link.select(".note") map { _.text } mkString "\n"
 
         //println("%s - %s - %s - %s".format(date, href, tags, note))
-        val newLink = db.links.create { l =>
-          l.date = date
-          l.tags = tags.toList
-          l.notes = note
-          l.title = href
-          l.link = href
-          l.fromRoot = true
+        db.synchronized {
+          val newLink = db.links.create { l =>
+            l.date = date
+            l.tags = tags.toList
+            l.notes = note
+            l.title = href
+            l.link = href
+            l.fromRoot = true
+          }
         }
 
+        count += 1
       }
+
+      // Return the number of found links
+      count
     }
   }
-
 }
+

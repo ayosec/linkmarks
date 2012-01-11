@@ -1,0 +1,4 @@
+#!/bin/sh
+
+JAVA_OPTS=-Xmx1536M
+exec scala -cp $(echo `dirname $0`/../*/*.jar | tr ' ' :) com.ayosec.linkmarks.importers.Importer "$@"
