@@ -6,5 +6,6 @@ public enum Relations implements RelationshipType {
   WithContent,
   Tag,
   TaggedLink,
+  GroupedTag,
   HasLink;
 }

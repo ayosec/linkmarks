@@ -47,11 +47,14 @@ class Tag private (val backend: GraphDatabase) extends Model {
 
   def add(link: Link) = node.createRelationshipTo(link.rawNode, Relations.TaggedLink)
 
+  def add(tag: Tag) = node.createRelationshipTo(tag.rawNode, Relations.GroupedTag)
+
   // Find all the nodes with this tag
   def links = {
     val traverser = Traversal.description.
       breadthFirst.
       relationships(Relations.TaggedLink, Direction.OUTGOING).
+      relationships(Relations.GroupedTag, Direction.OUTGOING).
       evaluator(new Evaluator {
         def evaluate(path: Path) = {
           if(path.endNode.getProperty("type", null) == "link")
