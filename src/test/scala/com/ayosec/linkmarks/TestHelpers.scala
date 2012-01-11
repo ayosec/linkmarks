@@ -10,12 +10,10 @@ object TestHelpers {
     tempName.delete
     tempName.mkdirs
 
-    val db = new GraphDatabase(tempName.getAbsolutePath)
-
     // Clean everything at the exit
     sys.addShutdownHook { Process(List("rm", "-rf", tempName.getAbsolutePath)) !  }
 
-    db
+    new GraphDatabase(tempName.getAbsolutePath)
   }
 
 }
