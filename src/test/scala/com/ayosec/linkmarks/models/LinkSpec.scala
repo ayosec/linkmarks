@@ -44,5 +44,29 @@ class LinkSpec extends FlatSpec with ShouldMatchers {
     node.getProperty("type") should be ("link")
   }
 
+  it should "find links with tags" in {
+    val db = TestHelpers.createDatabase
+
+    // Some links with tags
+    db.links.create { l =>
+      l.tags = List("foo", "bar")
+      l.link = "a"
+    }
+
+    db.links.create { l =>
+      l.tags = List("bar")
+      l.link = "b"
+    }
+
+    db.links.create { l =>
+      l.tags = List("foo")
+      l.link = "c"
+    }
+
+    // Find nodes with the tag "foo"
+    val nodes = db.tag("foo").links
+    nodes.map(_.link).toSet should be (Set("a", "c"))
+
+  }
 
 }

@@ -3,6 +3,8 @@ package com.ayosec.linkmarks
 import java.util.Iterator
 import java.util.HashMap
 
+import models.Tag
+
 import org.neo4j.graphdb.Node
 import org.neo4j.graphdb.Transaction
 import org.neo4j.graphdb.index.Index
@@ -18,8 +20,6 @@ class GraphDatabase(val rootPath: String) {
     db
   }
 
-  lazy val links = new collections.Links(this)
-
   def transaction[T](callback: Transaction => T): T = {
     val tx = instance.beginTx
     try {
@@ -33,6 +33,10 @@ class GraphDatabase(val rootPath: String) {
   }
 
   def root = instance.getReferenceNode
+
+  lazy val links = new collections.Links(this)
+
+  def tag(tagName: String) = Tag.get(this, tagName)
 
   // Indexes
 

@@ -38,9 +38,8 @@ class Link private (val backend: GraphDatabase) extends Model {
       if(builder.title != null) node.setProperty("title", builder.title)
       if(builder.link  != null) node.setProperty("link",  builder.link)
 
-      for(tagName <- builder.tags) {
-        Tag.get(backend, tagName).rawNode.createRelationshipTo(node, Relations.TaggedLink)
-      }
+      for(tagName <- builder.tags)
+        backend.tag(tagName).add(this)
 
       // Attach to the root node?
       if(builder.fromRoot)

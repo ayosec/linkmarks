@@ -2,7 +2,14 @@ package com.ayosec.linkmarks.models
 
 import com.ayosec.linkmarks.GraphDatabase
 import com.ayosec.linkmarks.Relations
+
 import org.neo4j.graphdb.Node
+import org.neo4j.graphdb.Path
+import org.neo4j.graphdb.Direction
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.traversal.Evaluator
+import org.neo4j.graphdb.traversal.Evaluation._
+import org.neo4j.kernel.Traversal
 
 object Tag {
 
@@ -38,4 +45,28 @@ class Tag private (val backend: GraphDatabase) extends Model {
 
   def name = node.getProperty("name")
 
+  def add(link: Link) = node.createRelationshipTo(link.rawNode, Relations.TaggedLink)
+
+  // Find all the nodes with this tag
+  def links = {
+    val traverser = Traversal.description.
+      breadthFirst.
+      relationships(Relations.TaggedLink, Direction.OUTGOING).
+      evaluator(new Evaluator {
+        def evaluate(path: Path) = {
+          if(path.endNode.getProperty("type", null) == "link")
+            INCLUDE_AND_CONTINUE
+          else
+            EXCLUDE_AND_CONTINUE
+        }
+      })
+
+    val nodeIterator = traverser.traverse(node).iterator
+    var foundNodes = List[Link]()
+
+    while(nodeIterator.hasNext)
+      foundNodes = new Link(backend, nodeIterator.next.endNode) +: foundNodes
+
+    foundNodes
+  }
 }
